@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "663559069944",
+    "firebase_url": "https://hitstorm-f9fd2-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "hitstorm-f9fd2",
+    "storage_bucket": "hitstorm-f9fd2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:663559069944:android:2ec4a3f37650819bfddb0d",
+        "android_client_info": {
+          "package_name": "com.hitstorm.hitstorm"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "663559069944-g7034sot0n3rpsif3sn7nque061k3k84.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDajCDQLL5IVtFBXMTtK8l1C3UZMJVDC5k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "663559069944-g7034sot0n3rpsif3sn7nque061k3k84.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "663559069944-08k65hv0l8ka0mj83i1k7pp2eqvir5f2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hitstorm.hitstorm"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

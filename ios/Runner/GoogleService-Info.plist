@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>663559069944-08k65hv0l8ka0mj83i1k7pp2eqvir5f2.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.663559069944-08k65hv0l8ka0mj83i1k7pp2eqvir5f2</string>
+	<key>API_KEY</key>
+	<string>AIzaSyB_e98qFIzNUhddA3LYWYqGv1my4AcC3dg</string>
+	<key>GCM_SENDER_ID</key>
+	<string>663559069944</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.hitstorm.hitstorm</string>
+	<key>PROJECT_ID</key>
+	<string>hitstorm-f9fd2</string>
+	<key>STORAGE_BUCKET</key>
+	<string>hitstorm-f9fd2.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:663559069944:ios:88ba6a1e464c62c2fddb0d</string>
+	<key>DATABASE_URL</key>
+	<string>https://hitstorm-f9fd2-default-rtdb.europe-west1.firebasedatabase.app</string>
+</dict>
+</plist>
