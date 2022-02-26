@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:hitstorm/backend/DatabaseRequests.dart';
+import 'package:hitstorm/backend/Dictionary.dart';
 import 'package:hitstorm/backend/Operations.dart';
 import 'package:hitstorm/backend/Topic.dart';
 import 'package:hitstorm/frontend/Styles.dart';
@@ -69,21 +70,7 @@ class _NewTopicViewState extends State<NewTopicView> {
                         maxLines: 1,
                         maxLength: 50,
                         decoration: InputDecoration(
-
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(7)),
-                              borderSide: BorderSide(
-                                  color: Colors.orange,
-                                  width: 2.0),
-                            ),
-
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(7)),
-                              borderSide: BorderSide(
-                                  color: Colors.black26,
-                                  width: 0.5),
-                            ),
-                            hintText: 'Topic',
+                            hintText: Dictionary.text('Topic'),
                             hintStyle: TextStyle(fontSize: 20,fontWeight: FontWeight.w500,)
                         ),
                         style: Styles.SmallTextDark,
@@ -100,26 +87,12 @@ class _NewTopicViewState extends State<NewTopicView> {
                   },
                   controller: introController,
                   maxLines: null,
-                  maxLength: 400,
+                  maxLength: 2000,
                   maxLengthEnforcement: MaxLengthEnforcement.enforced,
 
                   decoration: InputDecoration(
-                      focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(7)),
-                borderSide: BorderSide(
-                    color: Colors.orange,
-                    width: 2.0),
-              ),
-
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(7)),
-                        borderSide: BorderSide(
-                            color: Colors.black26,
-                            width: 0.5),
-                      ),
-
                       hintMaxLines: 3,
-                      hintText: 'Give a short intro. \n\nDo not target people.',
+                      hintText: Dictionary.text('Give a short intro. \n\nDo not target people.'),
                       hintStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)
                   ),
                   style: TextStyle(
@@ -140,7 +113,7 @@ class _NewTopicViewState extends State<NewTopicView> {
                 }
                 setButtonLoading(true);
                 if(profanityCheck()){
-                  showProfanitySnackbar("Profane language has been detected");
+                  showProfanitySnackbar(Dictionary.text("Profane language has been detected"));
                   setButtonLoading(false);
                   return true;
                 }
@@ -173,7 +146,7 @@ class _NewTopicViewState extends State<NewTopicView> {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(5.0),
-                    child: Text("share",
+                    child: Text(Dictionary.text("share"),
                       style: TextStyle(
                           fontSize: 25,
                           color: Colors.white,

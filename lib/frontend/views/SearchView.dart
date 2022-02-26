@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hitstorm/backend/DatabaseRequests.dart';
+import 'package:hitstorm/backend/Dictionary.dart';
 import 'package:hitstorm/backend/Topic.dart';
 
 class SearchView extends StatefulWidget {
@@ -51,14 +52,14 @@ class _SearchViewState extends State<SearchView> {
           builder: (BuildContext context, AsyncSnapshot<List<Topic>> snapshot){
             if (snapshot.hasError){
               return Center(
-                child: Text("Sorry, we have a problem"),
+                child: Text(Dictionary.text("Sorry, we have a problem")),
               );
             }
 
             if (snapshot.hasData && snapshot.data.length == 0){
 
               return Center(
-                child: Text("No results found"),
+                child: Text(Dictionary.text("No results found")),
               );
             }
 

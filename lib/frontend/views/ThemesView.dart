@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hitstorm/backend/DatabaseRequests.dart';
+import 'package:hitstorm/backend/Dictionary.dart';
 import 'package:hitstorm/backend/Theme.dart' as backendTheme;
 import 'package:hitstorm/frontend/views/Overview.dart';
 import 'package:hitstorm/frontend/views/Top25View.dart';
@@ -61,7 +62,7 @@ class _ThemesViewState extends State<ThemesView> {
           ],
           backgroundColor: Colors.green,
           elevation: 0,
-          title: Text("Themes 🔥",
+          title: Text(Dictionary.text("Themes 🔥"),
             style: TextStyle(
                 fontSize: 25,
                 fontWeight: FontWeight.w700,
@@ -69,66 +70,76 @@ class _ThemesViewState extends State<ThemesView> {
             ),),
 
         ),
-        body: GridView.builder(
-            itemCount: themes.length,
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 200,
-            childAspectRatio: 3 / 2,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 20),
-            itemBuilder: (conext, i){
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  onPressed: (){
+        body: RefreshIndicator(
+          color: Colors.orange,
+          strokeWidth: 5,
+          backgroundColor: Colors.blue,
+          displacement: 30,
+          onRefresh: ()async{
+            themes = await DatabaseRequests.getHottestThemes("");
+            DatabaseRequests.themes =themes;
+          },
+          child: GridView.builder(
+              itemCount: themes.length,
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 200,
+              childAspectRatio: 3 / 2,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 20),
+              itemBuilder: (conext, i){
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    onPressed: (){
 
-                    if(i == 0){
+                      if(i == 0){
+                        Navigator.push(context, new CupertinoPageRoute(
+                          builder: (context)=> new Top25View(),
+                        ));
+                      }else{
                       Navigator.push(context, new CupertinoPageRoute(
-                        builder: (context)=> new Top25View(),
+                          builder: (context)=> new Overview(t:themes[i]),
                       ));
-                    }else{
-                    Navigator.push(context, new CupertinoPageRoute(
-                        builder: (context)=> new Overview(t:themes[i]),
-                    ));
-                    }
-                  },
+                      }
+                    },
 
-                  style: ElevatedButton.styleFrom(
-                    elevation: 2,
-                    primary: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(20)),
-                      side:BorderSide(
-                        width:  1,
-                        style: BorderStyle.solid,
-                        color:Colors.grey,
+                    style: ElevatedButton.styleFrom(
+                      elevation: 2,
+                      primary: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                        side:BorderSide(
+                          width:  1,
+                          style: BorderStyle.solid,
+                          color:Colors.grey,
+                        ),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        children: [
+                          Text(themes[i].emoji,
+                            style: TextStyle(
+                              fontSize: 50,
+                              fontWeight: FontWeight.w600,
+                            ),),
+                          Text(
+                            themes[i].name,
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black54
+                            ),
+                          ),
+
+                        ],
                       ),
                     ),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      children: [
-                        Text(themes[i].emoji,
-                          style: TextStyle(
-                            fontSize: 50,
-                            fontWeight: FontWeight.w600,
-                          ),),
-                        Text(
-                          themes[i].name,
-                          style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black54
-                          ),
-                        ),
-
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }),
+                );
+              }),
+        ),
       ),
     );
   }

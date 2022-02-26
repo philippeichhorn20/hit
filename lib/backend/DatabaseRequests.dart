@@ -200,16 +200,19 @@ class DatabaseRequests{
 
 
   static Future<bool> commentTopic(Topic topic, Comment comment)async{
+    bool success = true;
     try {
-     FirebaseFirestore.instance.runTransaction((transaction) async{
+      await FirebaseFirestore.instance.runTransaction((transaction) async{
        comment.docRef = await topic.postRef.collection("Comments").add(comment.toMap());
        userRef.doc(auth.currentUser.uid)
            .update({'Comments': FieldValue.arrayUnion([comment.post.id])});
+     }).onError((error, stackTrace) {
+        success = false;
      });
     }catch(e){
       return false;
     }
-    return true;
+    return success;
   }
 
   static Future<bool> increment(Tendency tend, Topic topic, bool positive)async{

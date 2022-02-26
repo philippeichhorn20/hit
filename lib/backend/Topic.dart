@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
+import 'package:flutter/services.dart';
 import 'package:hitstorm/backend/Comment.dart';
 import 'package:hitstorm/backend/DatabaseRequests.dart';
 import 'package:hitstorm/frontend/Styles.dart';
@@ -104,6 +105,7 @@ class Topic {
   }
 
   void vote(Tendency tend) {
+    HapticFeedback.selectionClick();
     if (this.tendency == tend) {
       tend = Tendency.NO_TENDENCY;
     }

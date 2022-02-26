@@ -3,6 +3,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hitstorm/backend/DatabaseRequests.dart';
+import 'package:hitstorm/backend/Dictionary.dart';
 import 'package:hitstorm/frontend/CreateAccountSteps/UserDataScreen.dart';
 import 'package:hitstorm/frontend/Styles.dart';
 import 'package:hitstorm/frontend/views/ThemesView.dart';
@@ -58,7 +59,7 @@ class _SignUpViewState extends State<SignUpView> {
           children: <Widget>[
             SizedBox(
                 height: 200,
-                child: Image.asset("images/hitstorm.png", width: MediaQuery.of(context).size.width*0.6)),
+                child: Image.asset("images/hitstorm_green.png", width: MediaQuery.of(context).size.width*0.6)),
             Padding(
               //padding: const EdgeInsets.only(left:15.0,right: 15.0,top:0,bottom: 0),
               padding: EdgeInsets.symmetric(horizontal: 15),
@@ -153,7 +154,7 @@ class _SignUpViewState extends State<SignUpView> {
 
                                 backgroundColor: Colors.red
                             ),
-                            child: resetButtonIsLoading? Styles.LoadingAnimation : Text("Reset", style: TextStyle(color: Colors.white),),
+                            child: resetButtonIsLoading? Styles.LoadingAnimation : Text(Dictionary.text("Reset"), style: TextStyle(color: Colors.white),),
                             onPressed: ()async{
                               if(resetButtonIsLoading){
                                 return null;

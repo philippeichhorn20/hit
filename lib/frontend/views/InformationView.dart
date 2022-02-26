@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hitstorm/backend/DatabaseRequests.dart';
+import 'package:hitstorm/backend/Dictionary.dart';
 import 'package:hitstorm/frontend/CreateAccountSteps/SignUpView.dart';
 import 'package:hitstorm/frontend/Styles.dart';
 
@@ -38,7 +39,7 @@ class _InformationViewState extends State<InformationView> {
           }, icon: Icon(Icons.keyboard_arrow_down, color: Colors.blueGrey,), label: SizedBox()),
           backgroundColor: Colors.transparent,
           elevation: 0,
-          title: Text("Information", style: TextStyle(
+          title: Text(Dictionary.text("Information"), style: TextStyle(
               color: Colors.orange,
               fontWeight: FontWeight.w700,
               fontSize: 30
@@ -81,7 +82,7 @@ class _InformationViewState extends State<InformationView> {
                             isExpanded1 = !isExpanded1;
                           });
                         },
-                        child: Text("Who we are", style: TextStyle(
+                        child: Text(Dictionary.text("Who we are"), style: TextStyle(
                             color: Colors.blue,
                             fontWeight: FontWeight.w700,
                             fontSize: 20
@@ -107,7 +108,7 @@ class _InformationViewState extends State<InformationView> {
                             isExpanded2 = !isExpanded2;
                           });
                         },
-                        child: Text("Impressum", style: TextStyle(
+                        child: Text(Dictionary.text("Imprint"), style: TextStyle(
                             color: Colors.blue,
                             fontWeight: FontWeight.w700,
                             fontSize: 20
@@ -116,7 +117,7 @@ class _InformationViewState extends State<InformationView> {
                   isExpanded: isExpanded2,
                   body: ListTile(
                     title:
-                    const Text('To delete this panel, tap the trash can icon', style: TextStyle(
+                     Text(Dictionary.text('To delete this panel, tap the trash can icon'), style: TextStyle(
                         fontSize: 15,
                         color: Colors.black38,
                         fontWeight: FontWeight.w700
@@ -130,7 +131,7 @@ class _InformationViewState extends State<InformationView> {
               child: TextButton(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Text("Imprint", style: TextStyle(
+                  child: Text(Dictionary.text("Imprint"), style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: Colors.black54,
@@ -147,7 +148,7 @@ class _InformationViewState extends State<InformationView> {
               child: TextButton(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Text("Log Out", style: TextStyle(
+                  child: Text(Dictionary.text("Log Out"), style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: Colors.black54,
@@ -157,8 +158,8 @@ class _InformationViewState extends State<InformationView> {
                 onPressed: (){
                   setDeleteButtonLoading(true);
                   DatabaseRequests.logOut();
-                    Navigator.pushReplacement(
-                        context, MaterialPageRoute(builder: (_) => SignUpView()));
+                    Navigator.pushAndRemoveUntil(
+                        context, MaterialPageRoute(builder: (_) => SignUpView()), (Route<dynamic> route) => false,);
                     setDeleteButtonLoading(false);
                 },
               ),
@@ -169,7 +170,7 @@ class _InformationViewState extends State<InformationView> {
 
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Text("Delete my Account",
+                  child: Text(Dictionary.text("Delete my Account"),
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -182,12 +183,12 @@ class _InformationViewState extends State<InformationView> {
                     return AlertDialog(
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(20))),
-                      title: Text("Do you want to delete this account?"),
+                      title: Text(Dictionary.text("Do you want to delete this account?")),
                       content: Text(errorMessage),
                       actions: [
                         if(!deleteButtonIsLoading)
                           TextButton(
-                          child: const Text('Cancel'),
+                          child:  Text(Dictionary.text('Cancel')),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
@@ -197,7 +198,7 @@ class _InformationViewState extends State<InformationView> {
 
                             backgroundColor: Colors.red
                           ),
-                          child: deleteButtonIsLoading? Styles.LoadingAnimation : Text("Delete", style: TextStyle(color: Colors.white),),
+                          child: deleteButtonIsLoading? Styles.LoadingAnimation : Text(Dictionary.text("Delete"), style: TextStyle(color: Colors.white),),
                           onPressed: ()async{
                             if(deleteButtonIsLoading){
                               return null;
@@ -206,9 +207,9 @@ class _InformationViewState extends State<InformationView> {
 
                             bool success = await DatabaseRequests.deleteUser();
                             if(success){
-                              Navigator.push(context, new CupertinoPageRoute(
+                              Navigator.pushAndRemoveUntil(context, new CupertinoPageRoute(
                                 builder: (context)=> new SignUpView(),
-                              ));
+                              ), (Route<dynamic> route) => false,);
                             }
                             setDeleteButtonLoading(false);
                           },

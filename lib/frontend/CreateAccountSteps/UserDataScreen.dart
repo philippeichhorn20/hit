@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hitstorm/backend/DatabaseRequests.dart';
+import 'package:hitstorm/backend/Dictionary.dart';
 import 'package:hitstorm/frontend/Styles.dart';
 import 'package:hitstorm/frontend/views/ThemesView.dart';
 
@@ -40,11 +41,13 @@ class _UserDataScreenState extends State<UserDataScreen> {
               Navigator.pop(context);
             }, icon: Icon(Icons.arrow_back_ios, color: Colors.black54,), label: SizedBox()),
           ),
-          body: Stack(
-            children: [
-              Positioned(
-                top: MediaQuery.of(context).size.height*0.05,
-                child: Padding(
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+                SizedBox(
+                    height: 200,
+                    child: Image.asset("images/hitstorm_green.png", width: MediaQuery.of(context).size.width*0.6)),
+                Padding(
                   padding: const EdgeInsets.only(right: 20.0, left: 20, bottom: 20, top: 20),
                   child: Container(
                     width: MediaQuery.of(context).size.width*0.9,
@@ -85,11 +88,7 @@ class _UserDataScreenState extends State<UserDataScreen> {
                       ),
                     ),
                   ),
-                ),
-              ),Positioned(
-
-                top: MediaQuery.of(context).size.height*0.2,
-                child: Padding(
+                ),Padding(
                   padding: const EdgeInsets.only(right: 20.0, left: 20, bottom: 20, top: 20),
                   child: Container(
                     width: MediaQuery.of(context).size.width*0.9,
@@ -134,10 +133,7 @@ class _UserDataScreenState extends State<UserDataScreen> {
                     ),
                   ),
                 ),
-              ),
-              Positioned(
-                top: MediaQuery.of(context).size.height*0.35,
-                child: Padding(
+                Padding(
                   padding: const EdgeInsets.only(right: 20.0, left: 20, bottom: 20, top: 20),
                   child: Container(
                     width: MediaQuery.of(context).size.width*0.9,
@@ -182,30 +178,26 @@ class _UserDataScreenState extends State<UserDataScreen> {
                     ),
                   ),
                 ),
-              ),
-              Positioned(
-                  top: MediaQuery.of(context).size.height*0.55,
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 25),
-                    child: Row(
-                      children: [
-                        Text("I accept the terms of service", style: TextStyle(color: Colors.black54, fontSize: 18, ),),
-                        Switch(value: hasAcceptedTerms, onChanged: (bool){
-                          setState(() {
-                            hasAcceptedTerms = bool;
-                          });
-                        })
-                      ],
-                    ),
-                  )),
-              Positioned(
-                top: MediaQuery.of(context).size.height *0.75,
-                left: 0,
-                right: 0,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 20,right: 20),
+                Padding(
+                  padding: EdgeInsets.only(left: 25),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width*0.7,
+                          child: Text(Dictionary.text("I accept the terms of service"), style: TextStyle(color: Colors.black54, fontSize: 18, ),)),
+                      Switch(value: hasAcceptedTerms, onChanged: (bool){
+                        setState(() {
+                          hasAcceptedTerms = bool;
+                        });
+                      })
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only( top: 40),
                   child: Container(
                     height: 50,
+                    width: MediaQuery.of(context).size.width*0.9,
                     decoration: BoxDecoration(
                         color: passwordValid && hasAcceptedTerms ? Colors.orange:Colors.black26, borderRadius: BorderRadius.circular(20)),
                     child: TextButton(
@@ -215,6 +207,7 @@ class _UserDataScreenState extends State<UserDataScreen> {
                         }
                         setButtonLoading(true);
                         if(!passwordValid || !hasAcceptedTerms){
+                          setButtonLoading(false);
                           return null;
                         }else{
                           String response = await DatabaseRequests.createAccount(emailController.text, passwordController.text, usernameController.text);
@@ -245,8 +238,8 @@ class _UserDataScreenState extends State<UserDataScreen> {
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

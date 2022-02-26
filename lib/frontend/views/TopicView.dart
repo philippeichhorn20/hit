@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hitstorm/backend/Comment.dart';
 import 'package:hitstorm/backend/DatabaseRequests.dart';
+import 'package:hitstorm/backend/Dictionary.dart';
 import 'package:hitstorm/backend/Topic.dart';
 import 'package:hitstorm/frontend/Styles.dart';
 import 'package:hitstorm/frontend/views/ThemesView.dart';
@@ -67,9 +68,8 @@ class _TopicViewState extends State<TopicView> {
 
   Future<bool> addComments(Comment c) async {
     bool successful = true;
-    await DatabaseRequests.commentTopic(this.widget.topic, c)
+    successful = await DatabaseRequests.commentTopic(this.widget.topic, c)
         .onError((error, stackTrace) {
-      successful = false;
       return successful;
     });
     if (successful) {
@@ -146,31 +146,6 @@ class _TopicViewState extends State<TopicView> {
                         Expanded(child: SizedBox()),
                          TextButton.icon(
                                 onPressed: () async {
-                                  int result = await showMenu(
-                                    context: context,
-                                    position: RelativeRect.fromLTRB(
-                                        MediaQuery.of(context).size.width,
-                                        10,
-                                        10,
-                                        10),
-                                    items: [
-                                      if (!widget.topic.mine)
-                                        PopupMenuItem(
-                                          value: 1,
-                                          child: Text('report'),
-                                        ),
-                                      if (widget.topic.mine)
-                                        PopupMenuItem(
-                                          value: 2,
-                                          child: Text('delete'),
-                                        ),
-                                    ],
-                                    initialValue: 0,
-                                  );
-                                  if (result == 1) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                        ReportSnackBar(widget.topic));
-                                  } else if (result == 2) {
                                     bool result = await showDialog(
                                         context: context,
                                         builder: (context) {
@@ -178,10 +153,10 @@ class _TopicViewState extends State<TopicView> {
                                             shape: RoundedRectangleBorder(
                                                 borderRadius: BorderRadius.all(
                                                     Radius.circular(20))),
-                                            title: Text("Delete this Post?"),
+                                            title: Text(widget.topic.mine? Dictionary.text("Delete this Post?"): Dictionary.text("Report this Post?")),
                                             actions: [
                                               TextButton(
-                                                child: const Text('Cancel'),
+                                                child:  Text(Dictionary.text('Cancel')),
                                                 onPressed: () {
                                                   Navigator.of(context).pop();
                                                 },
@@ -194,15 +169,23 @@ class _TopicViewState extends State<TopicView> {
                                                       backgroundColor:
                                                       Colors.red),
                                                   child: Text(
-                                                    "Delete",
+                                                    Dictionary.text(widget.topic.mine?"Delete": "Report"),
                                                     style: TextStyle(
                                                         color: Colors.white),
                                                   ),
                                                   onPressed: () async {
-                                                    bool success =
-                                                    await DatabaseRequests
-                                                        .deletePost(
-                                                        widget.topic);
+                                                    bool success;
+                                                    if(widget.topic.mine){
+                                                      success =
+                                                      await DatabaseRequests
+                                                          .deletePost(
+                                                          widget.topic);
+                                                    }else{
+                                                      success =
+                                                      await DatabaseRequests
+                                                          .reportTopic(
+                                                          widget.topic);
+                                                    }
                                                     if (success) {
                                                       Navigator.pushReplacement(
                                                           context,
@@ -221,7 +204,7 @@ class _TopicViewState extends State<TopicView> {
                                     if (result == true) {
                                       Navigator.pop(context);
                                     }
-                                  }
+
                                 },
                                 style: TextButton.styleFrom(
                                   minimumSize: Size.zero,
@@ -255,7 +238,7 @@ class _TopicViewState extends State<TopicView> {
                     alignment: Alignment.center,
                     child: Text(
                         " ${widget.topic.theme} · "
-                        "${Styles.dateAsString(widget.topic.date)} ago",
+                        "${Styles.dateAsString(widget.topic.date)}",
                       maxLines: 1,
                       style: TextStyle(
                         color: Colors.black38,
@@ -280,7 +263,7 @@ class _TopicViewState extends State<TopicView> {
                             onPressed: () async {
                               setCommentButtonLoading(true);
                               if (profanityCheck()) {
-                                showProfanitySnackbar("Profane language has been detected");
+                                showProfanitySnackbar(Dictionary.text("Profane language has been detected"));
                                 setCommentButtonLoading(false);
                                 return false;
                               }
@@ -291,9 +274,9 @@ class _TopicViewState extends State<TopicView> {
                                     DatabaseRequests.pseudonym,
                                     widget.topic.postRef);
                                 if (await addComments(c)) {
-                                  showErrorMessage("added your comment");
+                                  showErrorMessage(Dictionary.text("added your comment"));
                                 }else{
-                                  showProfanitySnackbar("There has been an error, please try again later");
+                                  showProfanitySnackbar(Dictionary.text("There has been an error, please try again later"));
                                 }
                               }
                               await Future.delayed(Duration(seconds: 1));
@@ -375,28 +358,6 @@ class _CommentViewState extends State<CommentView> {
             width: MediaQuery.of(context).size.width * .15,
             child: TextButton.icon(
                 onPressed: () async {
-                  int result = await showMenu(
-                    context: context,
-                    position: RelativeRect.fromLTRB(
-                        MediaQuery.of(context).size.width, MediaQuery.of(context).size.height * 0.5, 0, 0),
-                    items: [
-                      if (!c.mine)
-                        PopupMenuItem(
-                          value: 1,
-                          child: Text('report'),
-                        ),
-                      if (c.mine)
-                        PopupMenuItem(
-                          value: 2,
-                          child: Text('delete'),
-                        ),
-                    ],
-                    initialValue: 0,
-                  );
-                  if (result == 1) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        ReportSnackBar(c));
-                  } else if (result == 2) {
                     bool result = await showDialog(
                         context: context,
                         builder: (context) {
@@ -404,10 +365,10 @@ class _CommentViewState extends State<CommentView> {
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.all(
                                     Radius.circular(20))),
-                            title: Text("Delete this Comment?"),
+                            title: c.mine ? Text(Dictionary.text("Delete this Comment?")) : Text(Dictionary.text("Report this Comment")),
                             actions: [
                               TextButton(
-                                child: const Text('Cancel'),
+                                child: Text(Dictionary.text('Cancel')),
                                 onPressed: () {
                                   Navigator.of(context).pop();
                                 },
@@ -420,14 +381,20 @@ class _CommentViewState extends State<CommentView> {
                                       backgroundColor:
                                       Colors.red),
                                   child: Text(
-                                    "Delete",
+                                    c.mine? "Delete": "Report",
                                     style: TextStyle(
                                         color: Colors.white),
                                   ),
                                   onPressed: () async {
-                                    bool success =
-                                    await DatabaseRequests
-                                        .deleteComment(c);
+                                    bool success = true;
+                                    if(c.mine) {
+                                      success =
+                                      await DatabaseRequests
+                                          .deleteComment(c);
+                                    }else{
+                                      await DatabaseRequests
+                                          .reportComment(c);
+                                    }
                                     if (success) {
                                       Navigator.pop(context);
                                       dropComment();
@@ -440,10 +407,10 @@ class _CommentViewState extends State<CommentView> {
                             ],
                           );
                         });
-                    if (result == true) {
+                    if (result == true && c.mine) {
                       Navigator.pop(context);
                     }
-                  }
+
                 },
                 icon: Icon(Icons.more_vert),
                 label: SizedBox()),
@@ -481,17 +448,6 @@ class _CommentViewState extends State<CommentView> {
       ],
     );
 
-  }
-  Widget ReportSnackBar(Comment comment) {
-    return SnackBar(
-      content: const Text('Do you want to report this Post?'),
-      action: SnackBarAction(
-        label: 'Report',
-        onPressed: () {
-          comment.report();
-        },
-      ),
-    );
   }
 }
 
