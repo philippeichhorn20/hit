@@ -6,7 +6,7 @@ import 'package:hitstorm/backend/DatabaseRequests.dart';
 import 'package:hitstorm/backend/Dictionary.dart';
 import 'package:hitstorm/backend/Topic.dart';
 import 'package:hitstorm/frontend/Styles.dart';
-import 'package:hitstorm/frontend/views/ThemesView.dart';
+import 'package:hitstorm/frontend/views/Overview.dart';
 import 'package:lazy_load_scrollview/lazy_load_scrollview.dart';
 
 class TopicView extends StatefulWidget {
@@ -26,7 +26,7 @@ class _TopicViewState extends State<TopicView> {
     comments.addAll(await DatabaseRequests.getHottestCommentsOfTopic(
         widget.topic, lastComment));
     setState(() {
-      comments;
+      comments = comments;
     });
   }
 
@@ -118,6 +118,7 @@ class _TopicViewState extends State<TopicView> {
               }
             },
             child: SingleChildScrollView(
+              physics: AlwaysScrollableScrollPhysics(),
               child: Column(
                 children: [
                   SizedBox(
@@ -186,12 +187,13 @@ class _TopicViewState extends State<TopicView> {
                                                           .reportTopic(
                                                           widget.topic);
                                                     }
-                                                    if (success) {
-                                                      Navigator.pushReplacement(
+                                                    if (success && widget.topic.mine) {
+                                                      Navigator.pushAndRemoveUntil(
                                                           context,
                                                           MaterialPageRoute(
                                                               builder: (_) =>
-                                                                  ThemesView()));
+                                                                  Overview(t: null)),
+                                                            (Route<dynamic> route) => false,);
                                                     } else {
                                                       Navigator.pop(context);
                                                     }
@@ -257,33 +259,34 @@ class _TopicViewState extends State<TopicView> {
                         ),
                       ),
 
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.15,
-                        child: TextButton.icon(
-                            onPressed: () async {
-                              setCommentButtonLoading(true);
-                              if (profanityCheck()) {
-                                showProfanitySnackbar(Dictionary.text("Profane language has been detected"));
-                                setCommentButtonLoading(false);
-                                return false;
-                              }
-                              if (commentController.text.isNotEmpty) {
-                                Comment c = Comment.newComment(
-                                    commentController.text,
-                                    widget.topic.tendency.toString(),
-                                    DatabaseRequests.pseudonym,
-                                    widget.topic.postRef);
-                                if (await addComments(c)) {
-                                  showErrorMessage(Dictionary.text("added your comment"));
-                                }else{
-                                  showProfanitySnackbar(Dictionary.text("There has been an error, please try again later"));
+                      Container(
+                        child: SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.15,
+                          child: TextButton.icon(
+                              onPressed: () async {
+                                setCommentButtonLoading(true);
+                                if (profanityCheck()) {
+                                  showProfanitySnackbar(Dictionary.text("Profane language has been detected"));
+                                  setCommentButtonLoading(false);
+                                  return false;
                                 }
-                              }
-                              await Future.delayed(Duration(seconds: 1));
-                              setCommentButtonLoading(false);
-                            },
-                            icon:  commentButtonIsLoading ? Expanded(child: Styles.LoadingAnimation): Icon(Icons.send),
-                            label:SizedBox()),
+                                if (commentController.text.isNotEmpty) {
+                                  Comment c = Comment.newComment(
+                                      commentController.text,
+                                      widget.topic.tendency.toString(),
+                                      DatabaseRequests.auth.currentUser.displayName,
+                                      widget.topic.postRef);
+                                  if (await addComments(c)) {
+                                    showErrorMessage(Dictionary.text("added your comment"));
+                                  }else{
+                                    showProfanitySnackbar(Dictionary.text("There has been an error, please try again later"));
+                                  }
+                                }
+                                setCommentButtonLoading(false);
+                              },
+                              icon:  commentButtonIsLoading ? Expanded(child: Container(child: Styles.LoadingAnimation)): Icon(Icons.send),
+                              label:SizedBox()),
+                        ),
                       )
                     ],
                   ),
@@ -436,11 +439,16 @@ class _CommentViewState extends State<CommentView> {
                       c.like();
                     });
                   },
-                  child: Text(
-                    "${c.likes.toString()} 🔥",
-                    style: TextStyle(
-                        color: c.liked ? Colors.red : Colors.blueGrey,
-                        fontWeight: FontWeight.w700),
+                  child: Row(
+                    children: [
+                      Text(
+                        "${c.likes.toString()}  ",
+                        style: TextStyle(
+                            color: c.liked ? Colors.red : Colors.blueGrey,
+                            fontWeight: FontWeight.w700),
+                      ),
+                      Icon(c.liked ? Icons.favorite: Icons.favorite_border, color: c.liked ? Colors.red: Colors.blueGrey,size: 18,)
+                    ],
                   )),
             ],
           ),
@@ -527,13 +535,10 @@ class _VotingBoardState extends State<VotingBoard> {
           padding: const EdgeInsets.all(8.0),
           child: ElevatedButton(
             onPressed: () {
-              if (widget.topic.tendency.index != 4) {
                 setState(() {
                   widget.topic.vote(tendency);
                 });
-              } else {
                 return null;
-              }
             },
             style: ElevatedButton.styleFrom(
               elevation: 2,
@@ -561,34 +566,3 @@ class _VotingBoardState extends State<VotingBoard> {
   }
 }
 
-/* FutureBuilder(
-                    future: getLatestComments(),
-                    builder: (context, AsyncSnapshot<List<Comment>> snapshot){
-                      if(snapshot.connectionState != ConnectionState.done){
-                        return CircularProgressIndicator();
-                      }
-                      if(snapshot.hasData && snapshot.data.length > 0){
-                        return RefreshIndicator(
-                          onRefresh: (){
-                            return getLatestComments();
-                          },
-                          triggerMode: RefreshIndicatorTriggerMode.anywhere,
-                          child: ListView.builder(
-                            physics: const NeverScrollableScrollPhysics(),
-                            scrollDirection: Axis.vertical,
-                            shrinkWrap: true,
-                            itemCount: snapshot.data.length,
-                            itemBuilder: (context, i){
-                              Comment c = snapshot.data[i];
-                              return CommentView(comment: c);
-                            },
-                          ),
-                        );
-                      }
-                      return TextButton(child: Text("no comments yet"),
-                      onPressed: (){
-                        return getLatestComments();
-                      },);
-                    })
-
- */

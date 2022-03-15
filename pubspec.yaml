@@ -27,12 +27,14 @@ dependencies:
   lazy_load_scrollview:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.2
-  cloud_firestore: ^3.1.0
+  cupertino_icons:
+  cloud_firestore:
   firebase_core:
   firebase_auth:
-  profanity_filter: ^2.0.0
+  profanity_filter:
   flutter_native_splash:
+  firebase_analytics: ^9.1.2
+  font_awesome_flutter: ^9.2.0
 
 
 

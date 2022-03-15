@@ -6,7 +6,7 @@ import 'package:hitstorm/backend/DatabaseRequests.dart';
 import 'package:hitstorm/backend/Dictionary.dart';
 import 'package:hitstorm/frontend/CreateAccountSteps/UserDataScreen.dart';
 import 'package:hitstorm/frontend/Styles.dart';
-import 'package:hitstorm/frontend/views/ThemesView.dart';
+import 'package:hitstorm/frontend/views/Overview.dart';
 
 class SignUpView extends StatefulWidget {
   @override
@@ -105,7 +105,7 @@ class _SignUpViewState extends State<SignUpView> {
                     dynamic loginResponse = await DatabaseRequests.logIn(usernameControl.text, passwordControl.text);
                     if(loginResponse == true){
                       Navigator.push(
-                          context, MaterialPageRoute(builder: (_) => ThemesView()));
+                          context, MaterialPageRoute(builder: (_) => Overview(t: null)));
                     }else{
                       updateLoginResponse(loginResponse);
                     }

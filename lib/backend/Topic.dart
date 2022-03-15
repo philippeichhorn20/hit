@@ -8,6 +8,7 @@ import 'package:hitstorm/backend/Comment.dart';
 import 'package:hitstorm/backend/DatabaseRequests.dart';
 import 'package:hitstorm/frontend/Styles.dart';
 import 'package:hitstorm/frontend/views/TopicView.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class Topic {
   DocumentReference postRef;
@@ -182,8 +183,8 @@ class Topic {
     };
   }
 
-  static Topic fromMap(
-      Map<String, dynamic> map, DocumentReference documentReference) {
+  static Future<Topic> fromMap(
+      Map<String, dynamic> map, DocumentReference documentReference) async{
     Iterable it = map.entries;
     Topic t = new Topic.createTopic(
         map.remove("topic"), map.remove("intro"), map.remove("theme"));
@@ -200,7 +201,7 @@ class Topic {
     } else {
       t.mine = false;
     }
-    t.sqliteCheck();
+    await t.sqliteCheck();
     return t;
   }
 
@@ -208,7 +209,7 @@ class Topic {
     DatabaseRequests.reportTopic(this);
   }
 
-  void sqliteCheck() async {
+  Future<void> sqliteCheck() async {
     List<Map<String, dynamic>> result = await DatabaseRequests.db.rawQuery(
         "SELECT tendency FROM Topics WHERE id = ?", [this.postRef.id]);
     if (result.isNotEmpty) {
@@ -318,13 +319,14 @@ class Topic {
                             overlayColor:
                                 MaterialStateProperty.all(Colors.transparent),
                           ),
-                          icon: Icon(
-                            Icons.arrow_circle_up,
+                          icon: FaIcon(
+                            FontAwesomeIcons.arrowUp,
                             color: this.tendency != Tendency.UPVOTE
                                 ? Colors.grey
                                 : Colors.green,
+                            size: 20,
                           ),
-                          label: Text(Styles.numberAsStrings(this.getUpvote()), style: Styles.SmallerTextGrey,)),
+                          label: Text("${Styles.numberAsStrings(this.getUpvote())}     •", style: Styles.SmallerTextGrey,)),
                       TextButton.icon(
                           onPressed: () {
                             setState(() {
@@ -343,7 +345,7 @@ class Topic {
                                 : Colors.amberAccent,
                           ),
 
-                          label: Text(Styles.numberAsStrings(this.getNeutral()), style: Styles.SmallerTextGrey,)),
+                          label: Text("${Styles.numberAsStrings(this.getNeutral())}     •", style: Styles.SmallerTextGrey,)),
                       TextButton.icon(
                           onPressed: () {
                             setState(() {
@@ -354,12 +356,12 @@ class Topic {
                             overlayColor:
                                 MaterialStateProperty.all(Colors.transparent),
                           ),
-                          icon: Icon(
-                            Icons.arrow_circle_down,
+                          icon: FaIcon(
+                            FontAwesomeIcons.arrowDown,
                             color: this.tendency != Tendency.DOWNVOTE
                                 ? Colors.grey
                                 : Colors.red,
-
+                            size: 20,
                           ),
                           label: Text(Styles.numberAsStrings(this.getDownvote()), style: Styles.SmallerTextGrey,)),
                     ],

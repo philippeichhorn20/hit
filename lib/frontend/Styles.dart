@@ -24,7 +24,7 @@ class Styles{
   static const TextStyle SmallerTextGrey = TextStyle(
       fontSize: 15,
       fontWeight: FontWeight.w700,
-      color: Colors.black54
+      color: Colors.black
   );
 
   static const CircularProgressIndicator LoadingAnimation = CircularProgressIndicator(

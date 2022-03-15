@@ -1,9 +1,11 @@
+import 'dart:io';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hitstorm/backend/DatabaseRequests.dart';
 import 'package:hitstorm/frontend/CreateAccountSteps/UserDataScreen.dart';
-import 'package:hitstorm/frontend/views/ThemesView.dart';
+import 'package:hitstorm/frontend/views/Overview.dart';
 import 'package:hitstorm/frontend/CreateAccountSteps/SignUpView.dart';
 
 bool loggedIn = false;
@@ -34,7 +36,7 @@ class MyApp extends StatelessWidget {
         routes: {
           "startScreen": (context) => SignUpView(),
           "loginScreen": (context) => UserDataScreen(),
-          "themeView": (context) => ThemesView(),
+          "themeView": (context) => Overview(t: null),
         },
       ),
     );

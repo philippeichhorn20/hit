@@ -37,8 +37,15 @@ class _NewTopicViewState extends State<NewTopicView> {
     return Container(
       child: Scaffold(
         appBar: AppBar(
+          toolbarHeight: 75,
+          bottom: PreferredSize(
+              child: Container(
+                color: Colors.green,
+                height: 1.5,
+              ),
+              preferredSize: Size.fromHeight(1.5)),
           title: Text( "Add a new topic", style: TextStyle(
-            color: Colors.green,
+            color: Colors.black,
             fontWeight: FontWeight.w700,
             fontSize: 25
           ),),
@@ -117,10 +124,10 @@ class _NewTopicViewState extends State<NewTopicView> {
                   setButtonLoading(false);
                   return true;
                 }
-                if(introController.text.isNotEmpty && nameController.text.isNotEmpty &&  themeIndex != null){
+                if(introController.text.isNotEmpty && nameController.text.isNotEmpty){
                   Topic t;
                   setState(() {
-                    t = Operations.newTopic(nameController.text, introController.text, DatabaseRequests.themes[themeIndex].name);
+                    t = Operations.newTopic(nameController.text, introController.text, themeIndex == null ? "":DatabaseRequests.themes[themeIndex].name);
                   });
                   t = await DatabaseRequests.createTopic(t);
                   if(t == null){
@@ -135,7 +142,7 @@ class _NewTopicViewState extends State<NewTopicView> {
                 }
               },
                   style: ElevatedButton.styleFrom(
-                    primary: introController.text.isNotEmpty && nameController.text.isNotEmpty && themeIndex != null? Colors.orange: Colors.black26,
+                    primary: introController.text.isNotEmpty && nameController.text.isNotEmpty? Colors.orange: Colors.black26,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.all(Radius.circular(30)),
                       side:BorderSide(
@@ -176,9 +183,8 @@ class _NewTopicViewState extends State<NewTopicView> {
       padding: const EdgeInsets.only(right: 12.0),
       child: ChoiceChip(
         label: Text(DatabaseRequests.themes[index].name),
-        avatar: Text(DatabaseRequests.themes[index].emoji),
         selected: themeIndex == index,
-        selectedColor: Colors.red,
+        selectedColor: Colors.green,
         onSelected: (bool selected) {
             setState(() {
               themeIndex = selected ? index : null;

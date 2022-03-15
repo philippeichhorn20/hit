@@ -1,7 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hitstorm/backend/DatabaseRequests.dart';
 import 'package:hitstorm/backend/Topic.dart';
 import 'package:hitstorm/frontend/Styles.dart';
+import 'package:hitstorm/frontend/views/NewTopicView.dart';
+import 'package:hitstorm/frontend/views/SearchView.dart';
 
 class Top25View extends StatefulWidget {
   @override
@@ -19,8 +22,28 @@ class _Top25ViewState extends State<Top25View> {
     return Container(
       child: Scaffold(
         appBar: AppBar(
+          actions: [
+            TextButton.icon(
+              label: SizedBox(),
+              onPressed: (){
+                Navigator.push(context, new CupertinoPageRoute(
+                  builder: (context)=> new SearchView(),
+                ));
+              },
+              icon: Icon(Icons.search, color: Colors.white, size: 32,),
+            ),
+          ],
           title: Text("Top 20", style: Styles.SmallText),
           backgroundColor: Colors.green,
+        ),
+        floatingActionButton: FloatingActionButton(
+          backgroundColor: Colors.green,
+          child: Icon(Icons.add, color: Colors.white, size: 38,),
+          onPressed: (){
+            Navigator.push(context, new CupertinoPageRoute(
+              builder: (context)=> new NewTopicView(),
+            ));
+          },
         ),
         body: RefreshIndicator(
           color: Colors.orange,

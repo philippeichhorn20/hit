@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:hitstorm/backend/DatabaseRequests.dart';
 import 'package:hitstorm/backend/Dictionary.dart';
 import 'package:hitstorm/frontend/Styles.dart';
-import 'package:hitstorm/frontend/views/ThemesView.dart';
+import 'package:hitstorm/frontend/views/Overview.dart';
 
 class UserDataScreen extends StatefulWidget {
   @override
@@ -213,7 +213,7 @@ class _UserDataScreenState extends State<UserDataScreen> {
                           String response = await DatabaseRequests.createAccount(emailController.text, passwordController.text, usernameController.text);
                           if(response == "" || response == null){
                             Navigator.push(
-                                context, MaterialPageRoute(builder: (_) => ThemesView()));
+                                context, MaterialPageRoute(builder: (_) => Overview(t: null)));
                           }else{
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                               content: Text(response, style: TextStyle(fontSize: 25, fontWeight: FontWeight.w700),),

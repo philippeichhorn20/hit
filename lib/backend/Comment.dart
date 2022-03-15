@@ -95,13 +95,11 @@ class Comment{
   void databaseCommentLike(bool isPositive)async{
     if(await DatabaseRequests.likeComment(this, isPositive)){
       if(isPositive){
-        print("liked");
       DatabaseRequests.db.rawUpdate(
           "INSERT OR REPLACE INTO Comments(commentId, postId, liked) VALUES(?, ?, 1);",
         [this.docRef.id, this.post.id]
       );
     }else{
-        print("unliked");
         DatabaseRequests.db.rawUpdate(
             "INSERT OR REPLACE INTO Comments(commentId, postId, liked) VALUES(?, ?, 0);",
             [this.docRef.id, this.post.id]

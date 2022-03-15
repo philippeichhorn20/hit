@@ -1,6 +1,4 @@
 import 'dart:async';
-
-
 import 'package:hitstorm/backend/Comment.dart';
 import 'package:hitstorm/backend/Theme.dart';
 import 'package:hitstorm/backend/Topic.dart';
@@ -8,6 +6,7 @@ import 'package:profanity_filter/profanity_filter.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 class DatabaseRequests{
   static Database db;
@@ -25,20 +24,19 @@ class DatabaseRequests{
   static String thisLoginTimeStamp;
   static List<Theme> themes;
   static ProfanityFilter filter;
-
+  static bool databaseInitSuccessful = false;
+  FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
   static Future<bool> init()async{
-   // topicRef = database.reference().child("topics");
 
-   print("initialising");
+    print("initialising");
    filter =  new ProfanityFilter.filterAdditionally(badWords);
-    thisLoginTimeStamp = DateTime.now().millisecondsSinceEpoch.toString();
     db = await openDatabase("hitstorm.db", version: 1,
         onCreate: (Database db, i) async {
           await db.execute(
               'CREATE TABLE MyComments (id TEXT PRIMARY KEY)');
           await db.execute(
-              'CREATE TABLE MyTopics (id TEXT PRIMARY KEY)');
+              'CREATE TABLE MyTopics (id TEXT PRIMARY KEY, time TIMESTAMP DEFAULT CURRENT_TIMESTAMP)');
           await db.execute(
               'CREATE TABLE Comments (commentId TEXT, postId TEXT, liked BOOLEAN, PRIMARY KEY (commentId, postId))');
           await db.execute(
@@ -46,13 +44,17 @@ class DatabaseRequests{
           await db.execute(
               'CREATE TABLE Variables (name Text PRIMARY KEY, value TEXT)'
           );
-
-
         },
 
 );
+   themes = await getHottestThemes("");
+  }
 
 
+  static Future<bool> initWithDB()async{
+    print("init with DB");
+    bool success = true;
+    thisLoginTimeStamp = DateTime.now().millisecondsSinceEpoch.toString();
     if(auth.currentUser != null){
       var sqlResult = await db.rawQuery("SELECT value FROM Variables WHERE name = 'lastLogin'");
       if(sqlResult.length > 0){
@@ -62,26 +64,36 @@ class DatabaseRequests{
       await db.execute(
           'INSERT OR REPLACE INTO Variables (name, value) VALUES ("lastLogin", $thisLoginTimeStamp)');
       DocumentSnapshot snap = await userRef.doc(auth.currentUser.uid).get();
+      if(!snap.exists){
+        success = false;
+      }
       Map<String, dynamic> data = snap.data();
       String lastLoginDB = data.remove("lastLogin");
       if(data != null && data.length > 0 && lastLoginDB != lastLogin){
-        getHistory();
+        if(!await getHistory()){
+          success = false;
+        }
       }
       userRef.doc(auth.currentUser.uid)
-          .update({"lastLogin": thisLoginTimeStamp});
+          .update({"lastLogin": thisLoginTimeStamp}).onError((error, stackTrace) {
+            success = false;
+      });
 
       username = auth.currentUser.displayName ?? "Anonym";
     }else{
 
     }
-    themes = await getHottestThemes("");
+    return success;
   }
 
   //todo: test!!!!
   static Future<bool> getHistory() async{
-    print("getting history");
+    bool success = true;
     DocumentSnapshot snap = await userRef.doc(auth.currentUser.uid)
         .get();
+    if(!snap.exists){
+      success = false;
+    }
       List<dynamic> posts = snap.get("Posts");
       await db.execute(
           'DELETE from MyTopics');
@@ -91,7 +103,10 @@ class DatabaseRequests{
             'insert into MyTopics (id) values (?)', [element]);
       });
 
-
+    await db.execute(
+        'DELETE from Topics');
+    await db.execute(
+        'DELETE from Comments');
     try {
       List<dynamic> comments = snap.get("Comments");
       await db.execute(
@@ -101,13 +116,16 @@ class DatabaseRequests{
             'insert into MyComments (id) values (?)', [element]);
       });
     }on FirebaseException catch(e){
-
+      success = false;
     }
-
+return success;
   }
 
 
   static Future<String> createAccount(String email, String password1, String username)async{
+    FirebaseAnalytics.instance.logEvent(
+        name: "create_new_account",
+    );
     try {
       await auth.createUserWithEmailAndPassword(
           email: email,
@@ -160,12 +178,12 @@ class DatabaseRequests{
 
 
   static Future<void> logOut()async {
-    await db.execute("DELETE FROM MyComments;");
-    await db.execute("DELETE FROM MyTopics;");
-    await db.execute("DELETE FROM Variables");
-    await db.execute("DELETE FROM MyComments;");
-    await db.execute("DELETE FROM Topics;");
 
+      await db.execute("DELETE FROM MyComments");
+      await db.execute("DELETE FROM MyTopics");
+      await db.execute("DELETE FROM Variables");
+      await db.execute("DELETE FROM Comments");
+      await db.execute("DELETE FROM Topics");
     await auth.signOut();
   }
 
@@ -195,11 +213,15 @@ class DatabaseRequests{
   }
 
   static Future<bool> reportTopic(Topic topic)async{
-    await postRef.doc(topic.postRef.id).update({"reportings": FieldValue.increment(1) });
+    await postRef.doc(topic.postRef.id).update({"reportings": FieldValue.increment(1), "rating": FieldValue.increment(-100) });
+    return true;
   }
 
 
   static Future<bool> commentTopic(Topic topic, Comment comment)async{
+     FirebaseAnalytics.instance.logEvent(
+      name: "comment_topic",
+    );
     bool success = true;
     try {
       await FirebaseFirestore.instance.runTransaction((transaction) async{
@@ -216,6 +238,12 @@ class DatabaseRequests{
   }
 
   static Future<bool> increment(Tendency tend, Topic topic, bool positive)async{
+     FirebaseAnalytics.instance.logEvent(
+    name: "vote_topic",
+       parameters: {
+      "direction": positive
+       }
+  );
     String s;
     bool isSuccessful = true;
     switch(tend){
@@ -246,9 +274,8 @@ class DatabaseRequests{
         .get();
     List<Topic> topics = [];
 
-
-     querySnapshot.docs.forEach((element) {
-      Topic t = Topic.fromMap(element.data() as Map<String, dynamic>,element.reference);
+    await Future.forEach(querySnapshot.docs, (element) async {
+      Topic t = await Topic.fromMap(element.data() as Map<String, dynamic>,element.reference);
       topics.add(t);
     });
 
@@ -274,24 +301,41 @@ class DatabaseRequests{
 
 
   static Future<List<Topic>> getHottestTopicsOfTheme(Topic lastTopic, Theme theme)async{
+    FirebaseAnalytics.instance.logEvent(
+      name: "getting_new_topics",
+    );
     List<Topic> topics = [];
     QuerySnapshot querySnapshot;
     if(lastTopic == null) {
-       querySnapshot = await postRef
-           .orderBy("rating",descending: true)
-           .where("theme", isEqualTo: theme.name)
-          .limit(10)
-          .get();
+      if(theme == null){
+        querySnapshot = await postRef
+            .orderBy("rating",descending: true)
+            .limit(10)
+            .get();
+      }else{
+        querySnapshot = await postRef
+            .orderBy("rating",descending: true)
+            .where("theme", isEqualTo: theme.name)
+            .limit(10)
+            .get();
+      }
     }else{
-      querySnapshot = await postRef
-          .where("theme", isEqualTo: theme.name)
-          .limit(10)
-          .startAtDocument(await lastTopic.postRef.get())
-          .get();
-    }
+      if(theme == null){
+        querySnapshot = await postRef
+            .limit(10)
+            .startAtDocument(await lastTopic.postRef.get())
+            .get();
+      }else{
+        querySnapshot = await postRef
+            .where("theme", isEqualTo: theme.name)
+            .limit(10)
+            .startAtDocument(await lastTopic.postRef.get())
+            .get();
+      }
 
-    querySnapshot.docs.forEach((element) {
-      Topic t = Topic.fromMap(element.data() as Map<String, dynamic>,element.reference);
+    }
+    await Future.forEach(querySnapshot.docs, (element) async {
+      Topic t = await Topic.fromMap(element.data() as Map<String, dynamic>,element.reference);
       topics.add(t);
     });
     return topics;
@@ -314,6 +358,12 @@ class DatabaseRequests{
 
 
   static Future<bool> likeComment(Comment comment, bool isPositive)async{
+    FirebaseAnalytics.instance.logEvent(
+      name: "like_comment",
+        parameters: {
+          "direction": isPositive
+        }
+    );
     bool noError = true;
     await comment.docRef.update({"likes": isPositive? FieldValue.increment(1): FieldValue.increment(-1)}).onError((error, stackTrace) {
       noError = false;
@@ -328,15 +378,16 @@ class DatabaseRequests{
   static Future<List<Comment>> getHottestCommentsOfTopic(Topic topic, Comment lastComment)async{
     QuerySnapshot querySnapshot;
     if(lastComment == null){
-      querySnapshot = await topic.postRef.collection("Comments").orderBy("likes", descending: true).limitToLast(10)
+      querySnapshot = await topic.postRef.collection("Comments").orderBy("likes", descending: false).limitToLast(10)
           .get();
     }else{
-       querySnapshot = await topic.postRef.collection("Comments").orderBy("likes", descending: true).limitToLast(10)
+       querySnapshot = await topic.postRef.collection("Comments").orderBy("likes", descending: false).limitToLast(10)
           .startAfterDocument(await lastComment.post.get())
           .get();
     }
 
       List<Comment> comments = [];
+
     querySnapshot.docs.forEach((entry)async {
           Map element = entry.data();
           Comment c = Comment.fromMap(element, entry.reference, topic.postRef);
@@ -349,25 +400,23 @@ class DatabaseRequests{
   static Future<List<Topic>> getMyTopics(int offset,)async {
     List<Topic> topics = [];
 
-    List<Map<String, dynamic>> results1 = await db.query("MyTopics", limit: 3, offset: offset);
-    List<Map<String, dynamic>> results3 = await db.query("Topics", limit: 3, offset: offset);
+    List<Map<String, dynamic>> results1 = await db.query("MyTopics", limit: 7, offset: offset, orderBy: "time DESC", );
+
     List<String> postIDs = [];
 
+    print("My Topics");
+    print(results1.length);
 
     results1.forEach((element) {
       postIDs.add(element.values.first);
     });
 
-    results3.forEach((element) {
-      postIDs.add(element.values.first);
-    });
-
     await Future.forEach(postIDs, (element) async {
       DocumentSnapshot snap = await postRef.doc(element).get();
-    //  print(snap.data() as Map<String, dynamic>);
       if(snap.data() != null) {
         topics.add(
-            Topic.fromMap(snap.data() as Map<String, dynamic>, snap.reference));
+            await Topic.fromMap(snap.data() as Map<String, dynamic>, snap.reference));
+
       }
     });
     return topics;
@@ -411,10 +460,9 @@ class DatabaseRequests{
           .limit(5)
           .get();
 
+     Future.forEach(querySnapshot1.docs,(element)async {
 
-     Future.forEach(querySnapshot1.docs,(element) {
-
-       Topic t =  Topic.fromMap(element.data() as Map<String, dynamic>,element.reference);
+       Topic t = await Topic.fromMap(element.data() as Map<String, dynamic>,element.reference);
       topics.add(t);
     });
       } on Exception catch (e) {
@@ -427,8 +475,8 @@ class DatabaseRequests{
         .limit(5)
         .get();
 
-     Future.forEach(querySnapshot2.docs,(element) {
-      Topic t = Topic.fromMap(element.data() as Map<String, dynamic>,element.reference);
+     Future.forEach(querySnapshot2.docs,(element) async{
+      Topic t = await Topic.fromMap(element.data() as Map<String, dynamic>,element.reference);
       topics.add(t);
     });
     return topics.toSet().toList();
@@ -485,11 +533,13 @@ class DatabaseRequests{
 
 
   static Future<List<Theme>> getHottestThemes(String regex)async{
+    if(!databaseInitSuccessful){
+      databaseInitSuccessful = await initWithDB();
+    }
     QuerySnapshot querySnapshot = await themeRef
         .limit(15)
         .get();
     List<Theme> themes = [];
-    themes.add(Theme.topTheme());
     querySnapshot.docs.forEach((element)async {
       Theme t = Theme.fromMap(element.data() as Map<String, dynamic>, element.reference);
       themes.add(t);
