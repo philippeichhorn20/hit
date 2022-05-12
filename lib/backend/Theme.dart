@@ -11,19 +11,28 @@ class Theme{
   String emoji = "🔥";
   DocumentReference docRef;
   int iconData = 61668;
+  ThemeTypes type = ThemeTypes.THEME_SPECIFIC;
 
   static Theme fromMap(Map<String, dynamic> map, DocumentReference docRef){
-    Theme t = new Theme(map.remove("name"), map.remove("emoji"), docRef);
+    Theme t = new Theme(map.remove("name"), docRef);
     t.iconData = map.remove("iconData");
     return t;
   }
 
-  Theme(this.name, this.emoji, this.docRef);
+  Theme(this.name,  this.docRef);
 
   Theme.topTheme(){
     name = "Top 25";
     emoji = "🔥";
     iconData = iconData;
+    type = ThemeTypes.OVERALL_TOP;
+  }
+
+  Theme.myTopicsTheme(){
+    name = "My Topics";
+    emoji = "🔥";
+    iconData = iconData;
+    type = ThemeTypes.MY_TOPICS;
   }
 
   Map<String, dynamic> toMap(){
@@ -78,4 +87,10 @@ class Theme{
       ),
     );
   }
+
+}
+enum ThemeTypes {
+  OVERALL_TOP,
+  THEME_SPECIFIC,
+  MY_TOPICS,
 }

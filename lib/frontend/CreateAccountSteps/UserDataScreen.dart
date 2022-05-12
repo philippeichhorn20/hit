@@ -45,7 +45,7 @@ class _UserDataScreenState extends State<UserDataScreen> {
             child: Column(
               children: [
                 SizedBox(
-                    height: 200,
+                    height: 100,
                     child: Image.asset("images/hitstorm_green.png", width: MediaQuery.of(context).size.width*0.6)),
                 Padding(
                   padding: const EdgeInsets.only(right: 20.0, left: 20, bottom: 20, top: 20),
@@ -88,7 +88,8 @@ class _UserDataScreenState extends State<UserDataScreen> {
                       ),
                     ),
                   ),
-                ),Padding(
+                ),
+                Padding(
                   padding: const EdgeInsets.only(right: 20.0, left: 20, bottom: 20, top: 20),
                   child: Container(
                     width: MediaQuery.of(context).size.width*0.9,

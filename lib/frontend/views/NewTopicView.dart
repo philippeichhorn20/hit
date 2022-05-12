@@ -44,7 +44,7 @@ class _NewTopicViewState extends State<NewTopicView> {
                 height: 1.5,
               ),
               preferredSize: Size.fromHeight(1.5)),
-          title: Text( "Add a new topic", style: TextStyle(
+          title: Text( Dictionary.text("Create a Quest"), style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.w700,
             fontSize: 25
@@ -172,7 +172,7 @@ class _NewTopicViewState extends State<NewTopicView> {
 
   generateChips(){
     List<Widget> chips = [];
-    for(int x = 1; x < DatabaseRequests.themes.length; x++){
+    for(int x = 0; x < DatabaseRequests.themes.length; x++){
       chips.add(_buildThemeChip(x));
     }
     return chips;

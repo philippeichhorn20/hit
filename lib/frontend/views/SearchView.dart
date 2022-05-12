@@ -50,7 +50,7 @@ class _SearchViewState extends State<SearchView> {
                     ),
                     borderSide: BorderSide.none,
                   ),
-                  fillColor: Colors.black12,
+                  fillColor: Colors.grey.shade200,
         filled: true,
         hintText: 'Search',
         hintStyle: TextStyle(fontSize: 18,)
@@ -67,11 +67,7 @@ class _SearchViewState extends State<SearchView> {
         body: FutureBuilder(
                 future: DatabaseRequests.getSearchedTopics(searchConntroller.text),
                 builder: (BuildContext context, AsyncSnapshot<List<Topic>> snapshot){
-                  if (snapshot.hasError){
-                    return Center(
-                      child: Text(Dictionary.text("Sorry, we have a problem")),
-                    );
-                  }
+
 
                   if (snapshot.hasData && snapshot.data.toSet().length + DatabaseRequests.themes.length == 0){
                     return Center(
@@ -81,19 +77,39 @@ class _SearchViewState extends State<SearchView> {
 
                   if(snapshot.connectionState == ConnectionState.done){
                     if(searchConntroller.text.length == 0){
-                      return ListView.builder(
-                        shrinkWrap: true,
-                          itemCount: snapshot.data.toSet().length + DatabaseRequests.themes.length,
-                          itemBuilder: (context, i){
-                            if(i < snapshot.data.toSet().length){
-                              Topic t = snapshot.data.toSet().elementAt(i);
-                              return t.listViewTopic(context, setState);
-                            }else{
-                              var theme = DatabaseRequests.themes[i-snapshot.data.toSet().length];
-                              return theme.toWidget(context);
-                            }
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom:8.0),
+                        child: ListView.builder(
+                        //   physics: NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                            itemCount: ((!snapshot.hasData || snapshot.data == null) ? 0:snapshot.data.toSet().length) + DatabaseRequests.themes.length+1,
+                            itemBuilder: (context, i){
+                              if(snapshot.hasData && snapshot.data != null && i < snapshot.data.toSet().length){
+                                Topic t = snapshot.data.toSet().elementAt(i);
+                                return t.listViewTopic(context, setState);
+                              }else if(((!snapshot.hasData || snapshot.data == null)? 0 : snapshot.data.toSet().length) == i){
+                                return Column(
+                                  children: [
+                                    Container(
+                                      color: Colors.grey.shade300,
+                                        padding: EdgeInsets.only(left: 20, top: 5, bottom: 5),
+                                        margin: EdgeInsets.only( top: 10, bottom: 10),
 
-                          }
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(Dictionary.text("Groups: "),
+                                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: Colors.black54),
+                                        )
+                                    ),
+
+                                  ],
+                                );
+                            }else{
+                                var theme = DatabaseRequests.themes[i-((!snapshot.hasData || snapshot.data == null )? 0: snapshot.data.toSet().length)-1];
+                                return theme.toWidget(context);
+                              }
+
+                            }
+                        ),
                       );
                     }else{
                       return ListView.builder(

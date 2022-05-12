@@ -4,15 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:hitstorm/backend/Comment.dart';
 import 'package:hitstorm/backend/DatabaseRequests.dart';
 import 'package:hitstorm/backend/Dictionary.dart';
+import 'package:hitstorm/backend/Theme.dart' as bT;
 import 'package:hitstorm/backend/Topic.dart';
 import 'package:hitstorm/frontend/Styles.dart';
 import 'package:hitstorm/frontend/views/Overview.dart';
 import 'package:lazy_load_scrollview/lazy_load_scrollview.dart';
+import 'package:flutter/services.dart';
+import 'package:share/share.dart';
 
 class TopicView extends StatefulWidget {
   Topic topic;
+  bT.Theme themeFrom;
 
-  TopicView({Key key, @required this.topic}) : super(key: key);
+  TopicView({Key key, @required this.topic, @required this.themeFrom}) : super(key: key);
 
   @override
   _TopicViewState createState() => _TopicViewState();
@@ -38,9 +42,17 @@ class _TopicViewState extends State<TopicView> {
     });
   }
 
-  void deleteComment(Comment c){
+
+  Future<bool> updateTopic()async{
+    Topic t = await DatabaseRequests.getSingleTopic(widget.topic.postRef.id);
     setState(() {
-      comments.remove(c);
+      widget.topic = t;
+    });
+  }
+
+  void dropComment(int x){
+    setState(() {
+      comments.elementAt(x).deleted = true;
     });
   }
 
@@ -52,12 +64,19 @@ class _TopicViewState extends State<TopicView> {
 
   void showErrorMessage(String errorMessage) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(
-        errorMessage,
+      content: SizedBox(
+        height: 50,
+        child: Text(
+          Dictionary.text(errorMessage),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20
+          ),
+        ),
       ),
       duration: const Duration(milliseconds: 3000),
       padding: const EdgeInsets.symmetric(
-        horizontal: 8.0, // Inner padding for SnackBar content.
+        horizontal: 50.0, // Inner padding for SnackBar content.
       ),
       backgroundColor: Colors.green,
       shape: RoundedRectangleBorder(
@@ -85,7 +104,7 @@ class _TopicViewState extends State<TopicView> {
 
   Widget ReportSnackBar(Topic topic) {
     return SnackBar(
-      content: const Text('Do you want to report this Post?'),
+      content:  Text(Dictionary.text('Do you want to report this Post?')),
       action: SnackBarAction(
         label: 'Report',
         onPressed: () {
@@ -95,6 +114,10 @@ class _TopicViewState extends State<TopicView> {
     );
   }
 
+
+
+
+
   bool firstStart = true;
 
   @override
@@ -103,210 +126,254 @@ class _TopicViewState extends State<TopicView> {
       getLatestComments(null);
       firstStart = false;
     }
+
     return Container(
       child: Scaffold(
-        body: RefreshIndicator(
-          onRefresh: () {
-            return getLatestComments(null);
+        body: LazyLoadScrollView(
+          onEndOfPage: () {
+            if(comments.length > 0){
+              return getLatestComments(comments.last);
+            }else{
+              return null;
+            }
           },
-          child: LazyLoadScrollView(
-            onEndOfPage: () {
-              if(comments.length > 0){
-                return getLatestComments(comments.last);
-              }else{
-                return null;
-              }
+          child: RefreshIndicator(
+            onRefresh: () async{
+              await updateTopic ();
             },
-            child: SingleChildScrollView(
-              physics: AlwaysScrollableScrollPhysics(),
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: 50,
-                  ),
-                  Container(
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * .1,
-                          child: IconButton(
-                              icon: Icon(Icons.arrow_back_ios),
-                              color: Colors.black54,
-                              onPressed: () {
-                                Navigator.pop(context,);
-                              }),
-                        ),
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * .65,
-                          child: Text(
-                            widget.topic.name,
-                           // overflow: TextOverflow.ellipsis,
-                            style:Styles.TextDark,
+            triggerMode: RefreshIndicatorTriggerMode.onEdge,
+            color: Colors.green,
+            strokeWidth: 2,
+            backgroundColor: Colors.grey.shade100,
+            edgeOffset: 10,
+            displacement: 30,
+            child: Container(
+              height: MediaQuery.of(context).size.height,
+
+              child: SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: 50,
+                    ),
+                    Container(
+                      child: Row(
+                        children: [
+                          TextButton(
+                            onPressed: (){
+                              Navigator.pop(context);
+                            },
+                            child: Icon(Icons.arrow_back_ios, size: 30, color: Colors.black54,),
                           ),
-                        ),
-                        Expanded(child: SizedBox()),
-                         TextButton.icon(
-                                onPressed: () async {
-                                    bool result = await showDialog(
-                                        context: context,
-                                        builder: (context) {
-                                          return AlertDialog(
-                                            shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(20))),
-                                            title: Text(widget.topic.mine? Dictionary.text("Delete this Post?"): Dictionary.text("Report this Post?")),
-                                            actions: [
-                                              TextButton(
-                                                child:  Text(Dictionary.text('Cancel')),
-                                                onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                },
-                                              ),
-                                              Padding(
-                                                padding:
-                                                const EdgeInsets.all(8.0),
-                                                child: TextButton(
-                                                  style: TextButton.styleFrom(
-                                                      backgroundColor:
-                                                      Colors.red),
-                                                  child: Text(
-                                                    Dictionary.text(widget.topic.mine?"Delete": "Report"),
-                                                    style: TextStyle(
-                                                        color: Colors.white),
-                                                  ),
-                                                  onPressed: () async {
-                                                    bool success;
-                                                    if(widget.topic.mine){
-                                                      success =
-                                                      await DatabaseRequests
-                                                          .deletePost(
-                                                          widget.topic);
-                                                    }else{
-                                                      success =
-                                                      await DatabaseRequests
-                                                          .reportTopic(
-                                                          widget.topic);
-                                                    }
-                                                    if (success && widget.topic.mine) {
-                                                      Navigator.pushAndRemoveUntil(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                              builder: (_) =>
-                                                                  Overview(t: null)),
-                                                            (Route<dynamic> route) => false,);
-                                                    } else {
-                                                      Navigator.pop(context);
-                                                    }
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width * .70,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 18.0),
+                              child: Text(
+                                widget.topic.name,
+                               // overflow: TextOverflow.ellipsis,
+                                style:Styles.TextDark,
+                              ),
+                            ),
+                          ),
+
+                          Expanded(child: SizedBox()),
+                           TextButton.icon(
+                                  onPressed: () async {
+                                      bool result = await showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return AlertDialog(
+                                              shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.all(
+                                                      Radius.circular(20))),
+                                              title: Text(widget.topic.mine? Dictionary.text("Delete this Post?"): Dictionary.text("Report this Post?")),
+                                              actions: [
+                                                TextButton(
+                                                  child:  Text(Dictionary.text('Cancel')),
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
                                                   },
                                                 ),
-                                              )
-                                            ],
-                                          );
-                                        });
-                                    if (result == true) {
-                                      Navigator.pop(context);
-                                    }
+                                                Padding(
+                                                  padding:
+                                                  const EdgeInsets.all(8.0),
+                                                  child: TextButton(
+                                                    style: TextButton.styleFrom(
+                                                        backgroundColor:
+                                                        Colors.red),
+                                                    child: Text(
+                                                      Dictionary.text(widget.topic.mine?"Delete": "Report"),
+                                                      style: TextStyle(
+                                                          color: Colors.white),
+                                                    ),
+                                                    onPressed: () async {
+                                                      bool success;
+                                                      if(widget.topic.mine){
+                                                        success =
+                                                        await DatabaseRequests
+                                                            .deletePost(
+                                                            widget.topic);
+                                                      }else{
+                                                        success =
+                                                        await DatabaseRequests
+                                                            .reportTopic(
+                                                            widget.topic);
+                                                      }
+                                                      if (success && widget.topic.mine) {
+                                                        Navigator.pushAndRemoveUntil(
+                                                            context,
+                                                            MaterialPageRoute(
+                                                                builder: (_) =>
+                                                                    Overview(t: bT.Theme.topTheme())),
+                                                              (Route<dynamic> route) => false,);
+                                                      } else {
+                                                        Navigator.pop(context);
+                                                      }
+                                                    },
+                                                  ),
+                                                )
+                                              ],
+                                            );
+                                          });
+                                      if (result == true) {
+                                        Navigator.pop(context);
+                                      }
+                                  },
+                                  style: TextButton.styleFrom(
+                                    minimumSize: Size.zero,
+                                    padding: EdgeInsets.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  icon: Icon(Icons.more_vert, color: Colors.black26,),
+                                  label: SizedBox()),
 
-                                },
-                                style: TextButton.styleFrom(
-                                  minimumSize: Size.zero,
-                                  padding: EdgeInsets.zero,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                icon: Icon(Icons.more_vert),
-                                label: SizedBox()),
-
-                      ],
-                    ),
-                  ),
-                  Divider(),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SizedBox(
-                      child: Text(
-                        widget.topic.intro ?? "",
-                        style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.blueGrey),
+                        ],
                       ),
                     ),
-                  ),
-                  Divider(),
-                  VotingBoard(topic: widget.topic),
-                  Container(
-                    padding: EdgeInsets.only(left:15, right: 15),
-                    width: MediaQuery.of(context).size.width,
-                    alignment: Alignment.center,
-                    child: Text(
-                        " ${widget.topic.theme} · "
-                        "${Styles.dateAsString(widget.topic.date)}",
-                      maxLines: 1,
-                      style: TextStyle(
-                        color: Colors.black38,
-                        fontSize: 12,
-                      ),),),
-                  Divider(),
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.85,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: TextFormField(
-                            controller: commentController,
+                    Padding(
+                      padding: const EdgeInsets.all(15.0),
+                      child: SizedBox(
+                        child: Text(
+                          widget.topic.intro ?? "",
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black54),
+                        ),
+                      ),
+                    ),
+                    VotingBoard(topic: widget.topic),
+                    Container(
+                      padding: EdgeInsets.only(left:15, right: 15),
+                      width: MediaQuery.of(context).size.width,
+                      alignment: Alignment.center,
+                      child: Text(
+                          " ${widget.topic.theme} · "
+                          "${Styles.dateAsString(widget.topic.date)}",
+                        maxLines: 1,
+                        style: TextStyle(
+                          color: Colors.black38,
+                          fontSize: 12,
+                        ),),),
+                    Container(
+                      child: OutlinedButton(
+                        autofocus: false,
+                        style: ElevatedButton.styleFrom(
+                          splashFactory: NoSplash.splashFactory,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                              side: BorderSide(width: 3),
+                              borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                      ),
-
-                      Container(
                         child: SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.15,
-                          child: TextButton.icon(
-                              onPressed: () async {
-                                setCommentButtonLoading(true);
-                                if (profanityCheck()) {
-                                  showProfanitySnackbar(Dictionary.text("Profane language has been detected"));
-                                  setCommentButtonLoading(false);
-                                  return false;
-                                }
-                                if (commentController.text.isNotEmpty) {
-                                  Comment c = Comment.newComment(
-                                      commentController.text,
-                                      widget.topic.tendency.toString(),
-                                      DatabaseRequests.auth.currentUser.displayName,
-                                      widget.topic.postRef);
-                                  if (await addComments(c)) {
-                                    showErrorMessage(Dictionary.text("added your comment"));
-                                  }else{
-                                    showProfanitySnackbar(Dictionary.text("There has been an error, please try again later"));
-                                  }
-                                }
-                                setCommentButtonLoading(false);
-                              },
-                              icon:  commentButtonIsLoading ? Expanded(child: Container(child: Styles.LoadingAnimation)): Icon(Icons.send),
-                              label:SizedBox()),
+                          width: MediaQuery.of(context).size.width *.8,
+                          child: Center(
+                            child: Text(Dictionary.text("share"), style: TextStyle(
+                              color: Colors.black54,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 17
+                            ),),
+                          ),
                         ),
-                      )
-                    ],
-                  ),
-                  RefreshIndicator(
-                    onRefresh: () {
-                      return getLatestComments(null);
-                    },
-                    triggerMode: RefreshIndicatorTriggerMode.anywhere,
-                    child: ListView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      scrollDirection: Axis.vertical,
-                      shrinkWrap: true,
-                      itemCount: comments.length,
-                      itemBuilder: (context, i) {
-                        Comment c = comments[i];
-                        return CommentView(comment: c);
-                      },
+                        onPressed: ()async{
+                          Share.share((await DatabaseRequests.createDynamicLink(widget.topic.postRef.id)).toString());
+                        },
+                      ),
                     ),
-                  )
-                ],
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.8,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: TextFormField(
+                              controller: commentController,
+                              cursorColor: Colors.black87,
+                              decoration: InputDecoration(
+                                focusColor: Colors.transparent,
+                                focusedBorder: InputBorder.none,
+                                hintText: "Comments"
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        Container(
+                          child: SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.2,
+                            child: TextButton.icon(
+
+                                onPressed: () async {
+                                  setCommentButtonLoading(true);
+                                  if (profanityCheck()) {
+                                    showProfanitySnackbar(Dictionary.text("Profane language has been detected"));
+                                    setCommentButtonLoading(false);
+                                    return false;
+                                  }
+                                  if (commentController.text.isNotEmpty) {
+                                    Comment c = Comment.newComment(
+                                        commentController.text,
+                                        widget.topic.tendency.toString(),
+                                        DatabaseRequests.auth.currentUser.displayName,
+                                        widget.topic.postRef);
+                                    if (await addComments(c)) {
+                                    }else{
+                                      showProfanitySnackbar(Dictionary.text("There has been an error, please try again later"));
+                                    }
+                                  }
+                                  setCommentButtonLoading(false);
+                                },
+                                style: TextButton.styleFrom(splashFactory: NoSplash.splashFactory),
+                                icon:  commentButtonIsLoading ? Expanded(child: Container(child: Styles.LoadingAnimation)): Icon(Icons.send,color: Colors.grey,),
+                                label:SizedBox()),
+                          ),
+                        )
+                      ],
+                    ),
+                    RefreshIndicator(
+                      onRefresh: () {
+                        return getLatestComments(null);
+                      },
+                      triggerMode: RefreshIndicatorTriggerMode.anywhere,
+                      child: ListView.builder(
+                        physics: const NeverScrollableScrollPhysics(),
+                        scrollDirection: Axis.vertical,
+                        shrinkWrap: true,
+                        itemCount: comments.length,
+                        itemBuilder: (context, i) {
+                          Comment c = comments[i];
+                          if(c.deleted){
+                            return SizedBox();
+                          }
+                          return c.getCommentListTile(context, dropComment, setState, i);
+                        },
+                      ),
+                    )
+                  ],
+                ),
               ),
             ),
           ),
@@ -322,142 +389,13 @@ class _TopicViewState extends State<TopicView> {
 
   void showProfanitySnackbar(String s) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(s),
+      content: Text(Dictionary.text(s)),
       backgroundColor: Colors.red,
     ));
   }
 }
 
-class CommentView extends StatefulWidget {
-  Comment comment;
 
-  CommentView({Key key, @required this.comment}) : super(key: key);
-
-  @override
-  _CommentViewState createState() => _CommentViewState();
-}
-
-class _CommentViewState extends State<CommentView> {
-  bool expanded = false;
-
-  void dropComment(){
-    setState(() {
-      widget.comment.deleted = true;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    Comment c = widget.comment;
-
-    if(c.deleted){
-      return SizedBox();
-    }
-    return Column(
-      children: [
-        Divider(),
-        ListTile(
-          trailing: SizedBox(
-            width: MediaQuery.of(context).size.width * .15,
-            child: TextButton.icon(
-                onPressed: () async {
-                    bool result = await showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(
-                                    Radius.circular(20))),
-                            title: c.mine ? Text(Dictionary.text("Delete this Comment?")) : Text(Dictionary.text("Report this Comment")),
-                            actions: [
-                              TextButton(
-                                child: Text(Dictionary.text('Cancel')),
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                              ),
-                              Padding(
-                                padding:
-                                const EdgeInsets.all(8.0),
-                                child: TextButton(
-                                  style: TextButton.styleFrom(
-                                      backgroundColor:
-                                      Colors.red),
-                                  child: Text(
-                                    c.mine? "Delete": "Report",
-                                    style: TextStyle(
-                                        color: Colors.white),
-                                  ),
-                                  onPressed: () async {
-                                    bool success = true;
-                                    if(c.mine) {
-                                      success =
-                                      await DatabaseRequests
-                                          .deleteComment(c);
-                                    }else{
-                                      await DatabaseRequests
-                                          .reportComment(c);
-                                    }
-                                    if (success) {
-                                      Navigator.pop(context);
-                                      dropComment();
-                                    } else {
-                                      Navigator.pop(context);
-                                    }
-                                  },
-                                ),
-                              )
-                            ],
-                          );
-                        });
-                    if (result == true && c.mine) {
-                      Navigator.pop(context);
-                    }
-
-                },
-                icon: Icon(Icons.more_vert),
-                label: SizedBox()),
-          ),
-          title: Text(c.text,
-              maxLines: expanded ? null : 5,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Colors.blueGrey,
-              )),
-
-          subtitle: Row(
-            children: [
-              Text("by ${c.pseudonym}"),
-              Expanded(child: SizedBox()),
-              TextButton(
-                  style: ButtonStyle(
-                    overlayColor: MaterialStateColor.resolveWith(
-                        (states) => Colors.transparent),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      c.like();
-                    });
-                  },
-                  child: Row(
-                    children: [
-                      Text(
-                        "${c.likes.toString()}  ",
-                        style: TextStyle(
-                            color: c.liked ? Colors.red : Colors.blueGrey,
-                            fontWeight: FontWeight.w700),
-                      ),
-                      Icon(c.liked ? Icons.favorite: Icons.favorite_border, color: c.liked ? Colors.red: Colors.blueGrey,size: 18,)
-                    ],
-                  )),
-            ],
-          ),
-        ),
-      ],
-    );
-
-  }
-}
 
 class VotingBoard extends StatefulWidget {
   Topic topic;
@@ -519,7 +457,6 @@ class _VotingBoardState extends State<VotingBoard> {
             ],
           ),
         ),
-        Divider(),
         Text("${widget.topic.getUpvotes()} upvotes · ${widget.topic.getNeutrals()} neutrals · ${widget.topic.getDownvote()} downvotes",
           style: TextStyle(color: Colors.black54, fontWeight: FontWeight.w500),),
         SizedBox(height: 10,)

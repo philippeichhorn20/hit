@@ -9,6 +9,7 @@ import 'package:hitstorm/backend/DatabaseRequests.dart';
 import 'package:hitstorm/frontend/Styles.dart';
 import 'package:hitstorm/frontend/views/TopicView.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hitstorm/backend/Theme.dart' as bT;
 
 class Topic {
   DocumentReference postRef;
@@ -172,16 +173,14 @@ class Topic {
       "neutrals": neutrals,
       "downvotes": downvote,
       "theme": theme,
+      "theme": theme,
       "date": DateTime.now().millisecondsSinceEpoch,
-      "rating": (DateTime.now().millisecondsSinceEpoch ~/
-          1000 ~/
-          60 ~/
-          60 ~/
-          12 *
-          100),
+      "rating": (DateTime.now().millisecondsSinceEpoch / 1000 / 60 / 60 / 12 * 100).toInt(),
       "author": DatabaseRequests.auth.currentUser.uid
     };
+
   }
+
 
   static Future<Topic> fromMap(
       Map<String, dynamic> map, DocumentReference documentReference) async{
@@ -300,71 +299,72 @@ class Topic {
                   textAlign: TextAlign.left,
                 ),
               ),
-              Divider(
-                indent: 10,
-                endIndent: 10,
-              ),
+             SizedBox(height: 8,),
               StatefulBuilder(builder: (context, setState) {
-                return SizedBox(
-                  height: 40,
-                  child: Row(
-                    children: [
-                      TextButton.icon(
-                          onPressed: () {
-                            setState(() {
-                              this.vote(Tendency.UPVOTE);
-                            });
-                          },
-                          style: ButtonStyle(
-                            overlayColor:
-                                MaterialStateProperty.all(Colors.transparent),
-                          ),
-                          icon: FaIcon(
-                            FontAwesomeIcons.arrowUp,
-                            color: this.tendency != Tendency.UPVOTE
-                                ? Colors.grey
-                                : Colors.green,
-                            size: 20,
-                          ),
-                          label: Text("${Styles.numberAsStrings(this.getUpvote())}     •", style: Styles.SmallerTextGrey,)),
-                      TextButton.icon(
-                          onPressed: () {
-                            setState(() {
-                              this.vote(Tendency.NEUTRAL);
-                            });
-                          },
-                          style: ButtonStyle(
-                            overlayColor:
-                                MaterialStateProperty.all(Colors.transparent),
+                return Padding(
+                  padding: const EdgeInsets.only(left: 10.0),
+                  child: SizedBox(
+                    height: 40,
+                    child: Row(
+                      children: [
+                        TextButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                this.vote(Tendency.UPVOTE);
+                              });
+                            },
+                            style: ButtonStyle(
+                              overlayColor:
+                                  MaterialStateProperty.all(Colors.transparent),
+                            ),
+                            icon: FaIcon(
+                              FontAwesomeIcons.arrowUp,
+                              color: this.tendency != Tendency.UPVOTE
+                                  ? Colors.grey
+                                  : Colors.green,
+                              size: 20,
+                            ),
+                            label: Text("${Styles.numberAsStrings(this.getUpvote())}     •", style: Styles.SmallerTextGrey,)),
+                        TextButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                this.vote(Tendency.NEUTRAL);
+                              });
+                            },
+                            style: ButtonStyle(
+                              overlayColor:
+                                  MaterialStateProperty.all(Colors.transparent),
 
-                          ),
-                          icon: Icon(
-                            Icons.do_not_disturb_on,
-                            color: this.tendency != Tendency.NEUTRAL
-                                ? Colors.grey
-                                : Colors.amberAccent,
-                          ),
+                            ),
+                            icon: Icon(
+                              Icons.do_not_disturb_on,
+                              color: this.tendency != Tendency.NEUTRAL
+                                  ? Colors.grey
+                                  : Colors.amberAccent,
+                            ),
 
-                          label: Text("${Styles.numberAsStrings(this.getNeutral())}     •", style: Styles.SmallerTextGrey,)),
-                      TextButton.icon(
-                          onPressed: () {
-                            setState(() {
-                              this.vote(Tendency.DOWNVOTE);
-                            });
-                          },
-                          style: ButtonStyle(
-                            overlayColor:
-                                MaterialStateProperty.all(Colors.transparent),
-                          ),
-                          icon: FaIcon(
-                            FontAwesomeIcons.arrowDown,
-                            color: this.tendency != Tendency.DOWNVOTE
-                                ? Colors.grey
-                                : Colors.red,
-                            size: 20,
-                          ),
-                          label: Text(Styles.numberAsStrings(this.getDownvote()), style: Styles.SmallerTextGrey,)),
-                    ],
+                            label: Text("${Styles.numberAsStrings(this.getNeutral())}     •", style: Styles.SmallerTextGrey,)),
+                        TextButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                this.vote(Tendency.DOWNVOTE);
+                              });
+                            },
+                            style: ButtonStyle(
+                              overlayColor:
+                                  MaterialStateProperty.all(Colors.transparent),
+                            ),
+                            icon: FaIcon(
+                              FontAwesomeIcons.arrowDown,
+                              color: this.tendency != Tendency.DOWNVOTE
+                                  ? Colors.grey
+                                  : Colors.red,
+                              size: 20,
+                            ),
+                            label: Text(Styles.numberAsStrings(this.getDownvote()) , style: Styles.SmallerTextGrey,)),
+
+                      ],
+                    ),
                   ),
                 );
               }),

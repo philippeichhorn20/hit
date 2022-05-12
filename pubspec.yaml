@@ -35,6 +35,10 @@ dependencies:
   flutter_native_splash:
   firebase_analytics: ^9.1.2
   font_awesome_flutter: ^9.2.0
+  url_launcher: ^6.0.20
+  firebase_dynamic_links: ^0.5.0+11
+  share: ^0.6.4+3
+  firebase_app_check: ^0.0.6+8
 
 
 
