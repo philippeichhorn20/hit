@@ -81,7 +81,7 @@ class _WelcomeViewState extends State<WelcomeView> {
                       dynamic loginResponse = await DatabaseRequests.logInAnonymously();
                       await DatabaseRequests.auth.currentUser.updateDisplayName(ScreenNameGenerator.generateUsername());
                       if(loginResponse == true){
-                        Navigator.push(
+                        Navigator.pushReplacement(
                             context, MaterialPageRoute(builder: (_) => Overview(t: bT.Theme.topTheme())));
                       }
                       setButtonLoading(false);

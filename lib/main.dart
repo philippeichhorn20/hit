@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +22,6 @@ void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await DatabaseRequests.init().timeout(Duration(seconds: 3), onTimeout: () => DatabaseRequests.auth.signOut() == null);
-  await FirebaseAppCheck.instance.activate();
   runApp(
     MyApp()
   );

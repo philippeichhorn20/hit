@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 
 import 'package:hitstorm/backend/Comment.dart';
+import 'package:hitstorm/backend/Subcomment.dart';
 import 'package:hitstorm/backend/Theme.dart';
 import 'package:hitstorm/backend/Topic.dart';
 import 'package:hitstorm/frontend/CreateAccountSteps/WelcomeView.dart';
@@ -38,9 +39,6 @@ class DatabaseRequests {
       "https://docs.google.com/document/d/e/2PACX-1vRro4b3TF65zzSW6NC7dyIjmDNZ2T7mOTunS9-Pjv5PG1SC6XtkQ3bEtPs3s9Y4yFMbJIqRubu2qgcp/pub";
 
   static Future<bool> init() async {
-    if (auth.currentUser != null && auth.currentUser.email != null) {
-      await auth.signOut();
-    }
 
     filter = new ProfanityFilter.filterAdditionally(badWords);
     db = await openDatabase(
@@ -56,14 +54,17 @@ class DatabaseRequests {
             'CREATE TABLE Topics (id TEXT PRIMARY KEY, tendency TEXT, time TIMESTAMP DEFAULT CURRENT_TIMESTAMP)');
         await db.execute(
             'CREATE TABLE Variables (name Text PRIMARY KEY, value TEXT)');
-        await deleteUser();
+        if(auth.currentUser != null){
+          await deleteUser();
+        }
       },
     );
     themes = await getHottestThemes("");
 
     dynamicLinks.onLink(onSuccess: (dynamicLinkData) {
       print("link found");
-      Navigator.of(NavigationService.navigatorKey.currentContext).push(CupertinoPageRoute(
+      Navigator.of(NavigationService.navigatorKey.currentContext).pushReplacement(
+          CupertinoPageRoute(
           builder: (context) => TopicLoadView(topicString: dynamicLinkData.link.queryParameters['id'])));
       return null;
     });
@@ -71,11 +72,11 @@ class DatabaseRequests {
         .authStateChanges()
         .listen((User user) {
       if (user == null) {
-        Navigator.of(NavigationService.navigatorKey.currentContext).push(CupertinoPageRoute(
-            builder: (context) => WelcomeView()));
+        Navigator.of(NavigationService.navigatorKey.currentContext).pushAndRemoveUntil(CupertinoPageRoute(
+            builder: (context) => WelcomeView()),
+          (Route<dynamic> route) => false,);
       }
     });
-
   }
 
   static Future<bool> initWithDB() async {
@@ -212,6 +213,8 @@ class DatabaseRequests {
     await db.execute("DELETE FROM Variables");
     await db.execute("DELETE FROM Comments");
     await db.execute("DELETE FROM Topics");
+    print("signout bei logout");
+
     await auth.signOut();
   }
 
@@ -265,6 +268,27 @@ class DatabaseRequests {
     }
     return success;
   }
+
+  static Future<bool> commentComment(Comment comment, Subcomment subcomment) async {
+    bool success = true;
+    try {
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        subcomment.reference =
+        await comment.docRef.collection("Subcomments").add(comment.toMap());
+        userRef.doc(auth.currentUser.uid).update({
+          'Subcomments': FieldValue.arrayUnion([subcomment.reference.id])
+        });
+        await db.insert("MyComments", {"id": comment.docRef.path});
+      }).onError((error, stackTrace) {
+        success = false;
+      });
+    } catch (e) {
+      return false;
+    }
+    return success;
+  }
+
+
 
   static Future<bool> increment(
       Tendency tend, Topic topic, bool positive) async {
@@ -392,6 +416,10 @@ class DatabaseRequests {
 
   static Future<void> reportComment(Comment c) async {
     await c.docRef.update({"reportings": FieldValue.increment(1)});
+  }
+
+  static Future<void> reportSubcomment(Subcomment c) async {
+    await c.reference.update({"reportings": FieldValue.increment(1)});
   }
 
   static Future<List<Comment>> getHottestCommentsOfTopic(
@@ -522,21 +550,24 @@ class DatabaseRequests {
 
   static Future<bool> deleteUser() async {
     bool success = true;
-    userRef.doc(auth.currentUser.uid).delete().onError((error, stackTrace) {
+    try{
+      userRef.doc(auth.currentUser.uid).delete();
+    } catch (e) {
       success = false;
-    });
+    }
+
     await DatabaseRequests.auth.currentUser
         .delete()
         .onError((error, stackTrace) {
       success = false;
     });
+    print("signout bei delete user");
     await DatabaseRequests.auth.signOut();
     await db.execute("DELETE FROM MyComments");
     await db.execute("DELETE FROM MyTopics");
     await db.execute("DELETE FROM Variables");
     await db.execute("DELETE FROM Comments");
     await db.execute("DELETE FROM Topics");
-
     return success;
   }
 
@@ -569,6 +600,26 @@ class DatabaseRequests {
       }
       userRef.doc(auth.currentUser.uid).update({
         'Comments': FieldValue.arrayRemove([comment.docRef])
+      });
+    }).onError((error, stackTrace) {
+      success = false;
+    });
+    return success;
+  }
+
+
+  static Future<bool> deletSubcomment(Subcomment comment) async {
+    bool success = true;
+    FirebaseFirestore.instance.runTransaction((transaction) async {
+      try {
+        await comment.reference.delete();
+        int x = await db.delete("MyComments",
+            where: "id = ?", whereArgs: [comment.reference.path]);
+      } catch (e) {
+        print(e);
+      }
+      userRef.doc(auth.currentUser.uid).update({
+        'Comments': FieldValue.arrayRemove([comment.reference])
       });
     }).onError((error, stackTrace) {
       success = false;

@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hitstorm/backend/DatabaseRequests.dart';
 import 'package:hitstorm/backend/Dictionary.dart';
 import 'package:hitstorm/backend/Topic.dart';
+import 'package:hitstorm/frontend/views/SubcommentView.dart';
 
 class Comment{
 
@@ -201,6 +203,7 @@ class Comment{
               )),
 
           subtitle: Row(
+
             children: [
               Text("by ${this.pseudonym}", style: TextStyle(
                 color: Colors.black54,
