@@ -72,6 +72,7 @@ class DatabaseRequests {
         .authStateChanges()
         .listen((User user) {
       if (user == null) {
+
         Navigator.of(NavigationService.navigatorKey.currentContext).pushAndRemoveUntil(CupertinoPageRoute(
             builder: (context) => WelcomeView()),
           (Route<dynamic> route) => false,);
@@ -556,18 +557,26 @@ class DatabaseRequests {
       success = false;
     }
 
-    await DatabaseRequests.auth.currentUser
-        .delete()
-        .onError((error, stackTrace) {
-      success = false;
-    });
+    try {
+      await DatabaseRequests.auth.currentUser
+          .delete()
+          .onError((error, stackTrace) {
+        success = false;
+      });
+    }catch (e){
+
+    }
     print("signout bei delete user");
     await DatabaseRequests.auth.signOut();
+    try{
     await db.execute("DELETE FROM MyComments");
     await db.execute("DELETE FROM MyTopics");
     await db.execute("DELETE FROM Variables");
     await db.execute("DELETE FROM Comments");
     await db.execute("DELETE FROM Topics");
+    }catch (e){
+
+    }
     return success;
   }
 
