@@ -20,6 +20,7 @@ class NewReviewParseFunctions{
       "insta_rating":review.price_rating,
       "text":review.text,
       "place_id": review.institution.id,
+
     });
     if (parseResponse.success) {
       review.id = parseResponse.result;
@@ -42,8 +43,7 @@ class NewReviewParseFunctions{
     });
     if (parseResponse.success) {
       print(parseResponse.results);
-      print(parseResponse.result);
-      print(1233);
+
       review.id = parseResponse.result;
     }else{
       print(parseResponse.error?.message);

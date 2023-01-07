@@ -1,6 +1,7 @@
 
 
 import 'package:flutter/material.dart';
+import 'package:guyde/Classes/Settings.dart';
 import 'package:guyde/Functions/OtherParseFunctions.dart';
 import 'package:parse_server_sdk_flutter/parse_server_sdk.dart';
 
@@ -12,6 +13,7 @@ class User{
   bool amFollowing = false;
   int connectionDistance = 3;
   String id = "YMzUDiaY9r";
+  bool isMe = false;
 
   User.test(){
     name = "PhilippEichhorn";
@@ -25,6 +27,9 @@ class User{
   User.fromMap(Map<String,dynamic> map){
     name = map.remove("username");
     id = map.remove("objectId");
+    if(Settings.thisUser != null && id == Settings.thisUser!.objectId){
+      isMe = true;
+    }
   }
 
   @override

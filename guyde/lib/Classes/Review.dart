@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:guyde/Classes/Institution.dart';
+import 'package:guyde/Classes/Settings.dart';
 import 'package:guyde/Classes/User.dart';
 
 class Review{
@@ -11,13 +12,14 @@ class Review{
   int insta_rating = 0;
   int international_rating = 0;
   int social_rating = 0;
-  User user = User.test();
+  User author = User.test();
   Institution institution = Institution.plain();
   String text = "";
   String id = "";
   bool recommend = false;
-  int numberRecommend = 0;
-  int numberVotes = 0;
+  DateTime createdAt = DateTime.now();
+
+
 
 
   Review.ratingsOnly(this.overall_rating,this.price_rating,this.value_rating,
@@ -29,8 +31,43 @@ class Review{
     recommend = vote;
   }
 
+  Review.fromMap(Map<String,dynamic> map){
+    institution = Institution.fromMap(map.remove("place_id"));
+    id = map.remove("objectId");
+    recommend = map.remove("recommendation");
+    author = User.fromMap(map.remove("author"));
+    text = map.remove("text");
+  }
 
+  @override
+  bool operator ==(Object other) {
+    // TODO: implement ==
+    return id == (other as Review).id;
+  }
   void setText(String text){
     this.text = text;
+  }
+
+
+  Widget toListTile(BuildContext context){
+    return Container(
+      margin: EdgeInsets.all(10),
+      padding: EdgeInsets.all(10),
+      width: MediaQuery.of(context).size.width*0.9,
+      decoration: BoxDecoration(
+          color: author.isMe? Colors.white30:Colors.white10,
+          border: Border.all(
+              color:Colors.transparent,
+              width: .7
+          ),
+          borderRadius: const BorderRadius.all(Radius.circular(20)
+          )
+      ),
+      child: ListTile(
+        title: Text(text),
+        subtitle: Text(author.name),
+      ),
+    );
+
   }
 }

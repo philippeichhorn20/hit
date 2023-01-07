@@ -1,4 +1,5 @@
 import 'package:guyde/Classes/Institution.dart';
+import 'package:guyde/Classes/Review.dart';
 import 'package:guyde/Classes/User.dart';
 import 'package:parse_server_sdk_flutter/parse_server_sdk.dart';
 import 'HelperCloudFuctions.dart';
@@ -63,13 +64,22 @@ class OtherParseFunctions{
     final ParseCloudFunction function = ParseCloudFunction('getSpotsOfFriendsReviews');
     final ParseResponse parseResponse = await function.execute();
     print("reviews");
+    List<Review> list = [];
     print(parseResponse.result);
-    List<Institution> list = [];
+    print(parseResponse.results);
+    Set<Institution> institutionSet = Set();
     (parseResponse.result as List<dynamic>).forEach((element) {
-      print(element);
-      list.add(Institution.fromMap((element as Map<String,dynamic>).remove("place_id")));
+      Review review = Review.fromMap(element);
+      institutionSet.add(review.institution);
+      Institution? i = institutionSet.lookup(review.institution);
+      list.add(review);
+      if(i != null){
+        i.reviews.add(review);
+      }
     });
-    return list;
+    print(list.length);
+
+    return institutionSet.toList();
 
   }
 
@@ -87,7 +97,6 @@ class OtherParseFunctions{
 
     List<Institution> list = [];
     (parseResponse.result as List<dynamic>).forEach((element) {
-      print(element);
       list.add(Institution.fromMap(element));
     });
     return list;
